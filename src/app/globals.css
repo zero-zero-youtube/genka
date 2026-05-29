@@ -1,27 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #0F1117;
+  --bg-secondary: #1A1D26;
+  --bg-tertiary: #222639;
+  --border: #2E3347;
+  --text-primary: #F0F2F8;
+  --text-secondary: #8B92A9;
+  --accent-primary: #F59E0B;
+  --accent-secondary: #3B82F6;
+  --danger: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Noto Sans JP', sans-serif;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .text-genka-primary { color: var(--text-primary); }
+  .text-genka-secondary { color: var(--text-secondary); }
+  .text-success { color: var(--success); }
+  .text-warning { color: var(--warning); }
+  .text-danger { color: var(--danger); }
+  .bg-genka-primary { background-color: var(--bg-primary); }
+  .bg-genka-secondary { background-color: var(--bg-secondary); }
+  .bg-genka-tertiary { background-color: var(--bg-tertiary); }
+  .border-genka { border-color: var(--border); }
+
+  /* 赤字リスクのグロー効果 */
+  .danger-glow {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+  }
+
+  /* ステータスバッジ */
+  .badge-danger {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .badge-warning {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .badge-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  /* 点滅アニメーション（赤字警告） */
+  .animate-pulse-danger {
+    animation: pulse-danger 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-danger {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 }
