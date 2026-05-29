@@ -156,20 +156,19 @@ export default function LandingPage() {
 
       {/* 料金 */}
       <section className="px-6 py-16 bg-[#1A1D26]">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl lg:text-3xl font-bold text-center mb-3">料金プラン</h2>
-          <p className="text-[#8B92A9] text-center mb-10">まず30日間無料でお試しいただけます</p>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* スターター */}
-            <div className="bg-[#0F1117] border border-[#2E3347] rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-1">スターター</h3>
-              <p className="text-[#8B92A9] text-sm mb-4">小規模工務店向け</p>
+          <p className="text-[#8B92A9] text-center mb-10">まず無料プランでお試しいただけます</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* フリー */}
+            <div className="bg-[#0F1117] border border-[#2E3347] rounded-2xl p-8 flex flex-col">
+              <h3 className="text-xl font-bold mb-1">フリー</h3>
+              <p className="text-[#8B92A9] text-sm mb-4">まず試したい方へ</p>
               <div className="mb-6">
-                <span className="font-mono text-4xl font-bold text-[#F0F2F8]">¥30,000</span>
-                <span className="text-[#8B92A9]">/月</span>
+                <span className="font-mono text-4xl font-bold text-[#F0F2F8]">無料</span>
               </div>
-              <ul className="space-y-3 mb-8">
-                {['工事10件まで', 'スマホ対応', '完工レポート', 'メールサポート'].map((f) => (
+              <ul className="space-y-3 mb-8 flex-1">
+                {['工事3件まで', '1ユーザー', '基本機能のみ', 'GenKaロゴ表示あり'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
                     <span className="text-[#8B92A9]">{f}</span>
@@ -180,29 +179,23 @@ export default function LandingPage() {
                 href="/login"
                 className="block text-center bg-[#222639] hover:bg-[#2E3347] text-[#F0F2F8] font-bold py-3 rounded-xl transition-colors"
               >
-                30日間無料で試す
+                無料で始める
               </Link>
             </div>
 
             {/* スタンダード */}
-            <div className="bg-[#0F1117] border-2 border-amber-500/60 rounded-2xl p-8 relative">
+            <div className="bg-[#0F1117] border-2 border-amber-500 rounded-2xl p-8 relative flex flex-col">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-gray-900 text-xs font-bold px-4 py-1 rounded-full">
                 おすすめ
               </div>
               <h3 className="text-xl font-bold mb-1">スタンダード</h3>
               <p className="text-[#8B92A9] text-sm mb-4">成長中の建設会社向け</p>
               <div className="mb-6">
-                <span className="font-mono text-4xl font-bold text-[#F0F2F8]">¥80,000</span>
+                <span className="font-mono text-4xl font-bold text-[#F0F2F8]">¥99,000</span>
                 <span className="text-[#8B92A9]">/月</span>
               </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  '工事件数無制限',
-                  'スマホ対応',
-                  '完工レポート + AI分析',
-                  '複数ユーザー',
-                  '電話・メールサポート',
-                ].map((f) => (
+              <ul className="space-y-3 mb-8 flex-1">
+                {['工事無制限', '10ユーザー', '全機能', 'GenKaロゴなし'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
                     <span className="text-[#8B92A9]">{f}</span>
@@ -212,6 +205,30 @@ export default function LandingPage() {
               <Link
                 href="/login"
                 className="block text-center bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 rounded-xl transition-colors"
+              >
+                30日間無料で試す
+              </Link>
+            </div>
+
+            {/* プロ */}
+            <div className="bg-[#0F1117] border border-[#2E3347] rounded-2xl p-8 flex flex-col">
+              <h3 className="text-xl font-bold mb-1">プロ</h3>
+              <p className="text-[#8B92A9] text-sm mb-4">大規模・複数現場向け</p>
+              <div className="mb-6">
+                <span className="font-mono text-4xl font-bold text-[#F0F2F8]">¥198,000</span>
+                <span className="text-[#8B92A9]">/月</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1">
+                {['ユーザー無制限', 'AI月次レポート', '優先メールサポート'].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm">
+                    <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
+                    <span className="text-[#8B92A9]">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/login"
+                className="block text-center bg-[#222639] hover:bg-[#2E3347] text-[#F0F2F8] font-bold py-3 rounded-xl transition-colors"
               >
                 30日間無料で試す
               </Link>
