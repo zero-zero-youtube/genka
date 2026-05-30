@@ -33,41 +33,47 @@ export default function TeamPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setMyUserId(user.id)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setLoading(false); return }
+        setMyUserId(user.id)
 
-      // 自分のcompany_id取得
-      const { data: memberData } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .single()
-      if (!memberData) return
-      setCompanyId(memberData.company_id)
+        // 自分のcompany_id取得
+        const { data: memberData, error: memberErr } = await supabase
+          .from('company_members')
+          .select('company_id')
+          .eq('user_id', user.id)
+          .single()
 
-      // メンバー一覧取得（auth.usersはRLS外なのでemail別途取得）
-      const { data: membersData } = await supabase
-        .from('company_members')
-        .select('id, user_id, role, joined_at')
-        .eq('company_id', memberData.company_id)
-        .order('joined_at', { ascending: true })
+        if (memberErr || !memberData) {
+          console.error('company_members取得エラー:', memberErr)
+          setLoading(false)
+          return
+        }
+        setCompanyId(memberData.company_id)
 
-      // 各メンバーのメールをauth.users経由で取得（自分のみ取得可能なので別途保存が必要）
-      // ここではuser_idをそのまま表示し、招待メールがある場合はinvitationsから補完
-      setMembers((membersData ?? []) as MemberRow[])
+        // メンバー一覧取得
+        const { data: membersData } = await supabase
+          .from('company_members')
+          .select('id, user_id, role, joined_at')
+          .eq('company_id', memberData.company_id)
+          .order('joined_at', { ascending: true })
+        setMembers((membersData ?? []) as MemberRow[])
 
-      // 招待一覧取得（未承認のみ）
-      const { data: invData } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('company_id', memberData.company_id)
-        .is('accepted_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-      setInvitations(invData ?? [])
-
-      setLoading(false)
+        // 招待一覧取得（未承認のみ）
+        const { data: invData } = await supabase
+          .from('invitations')
+          .select('*')
+          .eq('company_id', memberData.company_id)
+          .is('accepted_at', null)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+        setInvitations(invData ?? [])
+      } catch (e) {
+        console.error('fetchData error:', e)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchData()
   }, [])
@@ -124,8 +130,24 @@ export default function TeamPage() {
   if (loading) {
     return (
       <DashboardLayout>
+        <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-4">
+          <div className="h-8 w-48 bg-[#2E3347] rounded animate-pulse" />
+          <div className="h-40 bg-[#2E3347] rounded-xl animate-pulse" />
+          <div className="h-40 bg-[#2E3347] rounded-xl animate-pulse" />
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!companyId) {
+    return (
+      <DashboardLayout>
         <div className="p-6 lg:p-8 max-w-3xl mx-auto">
-          <div className="h-8 w-48 bg-[#2E3347] rounded animate-pulse mb-8" />
+          <p className="text-[#8B92A9]">
+            チームデータを取得できませんでした。Supabaseの
+            <code className="text-amber-400 mx-1">company_members</code>
+            テーブルが作成されているか確認してください。
+          </p>
         </div>
       </DashboardLayout>
     )
