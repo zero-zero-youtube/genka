@@ -10,13 +10,22 @@ function getSupabase(): SupabaseClient {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   // URLが有効な場合のみ本物のクライアントを作成
+  const authOptions = {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: 'genka-auth',
+    },
+  }
+
   if (url && url.startsWith('https://') && key) {
-    _supabase = createClient(url, key)
+    _supabase = createClient(url, key, authOptions)
   } else {
     // 開発用ダミー（実際の接続は行われない）
     _supabase = createClient(
       'https://placeholder.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.placeholder'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.placeholder',
+      authOptions
     )
   }
   return _supabase
