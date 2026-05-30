@@ -165,6 +165,17 @@ export default function LoginPage() {
             >
               {mode === 'login' ? 'ログイン' : '無料で始める'}
             </Button>
+
+            {mode === 'login' && (
+              <div className="text-center">
+                <a
+                  href="/forgot-password"
+                  className="text-[#8B92A9] hover:text-amber-400 text-sm transition-colors"
+                >
+                  パスワードを忘れた方はこちら
+                </a>
+              </div>
+            )}
           </form>
         </div>
 
