@@ -25,29 +25,37 @@ export default function ProjectChat({ projectId }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // channelをuseEffectスコープで宣言（クリーンアップが確実に動くように）
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
     const init = async () => {
-      // セッション確認（競合状態を防ぐためawaitで待つ）
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-      if (sessionError) {
-        console.error('[ProjectChat] getSession error:', sessionError)
-        setAuthError(`認証エラー: ${sessionError.message}`)
-        return
-      }
-
-      if (!session) {
-        console.warn('[ProjectChat] セッションなし — localStorage key:', 'genka-auth',
-          '— localStorage値:', typeof window !== 'undefined' ? localStorage.getItem('genka-auth') : 'N/A')
+      if (sessionError || !session) {
+        console.error('[ProjectChat] session error:', sessionError, 'session:', session)
         setAuthError('セッションが見つかりません。再ログインしてください。')
         return
       }
 
-      console.log('[ProjectChat] session OK, user:', session.user.id, 'expires:', new Date(session.expires_at! * 1000).toLocaleString())
       setCurrentUserId(session.user.id)
 
-      await loadMessages()
+      // メッセージ初回取得
+      const { data, error } = await supabase
+        .from('project_messages')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true })
+        .limit(100)
 
-      const channel = supabase
+      if (error) {
+        console.error('[ProjectChat] select error:', JSON.stringify(error))
+      } else if (data) {
+        setMessages(data)
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      }
+
+      // Realtime購読（useEffectスコープのchannelに代入）
+      channel = supabase
         .channel(`project-chat-${projectId}`)
         .on(
           'postgres_changes',
@@ -58,36 +66,29 @@ export default function ProjectChat({ projectId }: Props) {
             filter: `project_id=eq.${projectId}`,
           },
           (payload) => {
+            console.log('[ProjectChat] Realtime INSERT received:', payload.new)
             setMessages(prev => [...prev, payload.new as Message])
             setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           }
         )
-        .subscribe()
-
-      return () => { supabase.removeChannel(channel) }
+        .subscribe((status, err) => {
+          console.log('[ProjectChat] Realtime status:', status, err ?? '')
+          if (status === 'CHANNEL_ERROR') {
+            console.error('[ProjectChat] Realtime channel error:', err)
+          }
+        })
     }
 
     init()
+
+    // useEffectのクリーンアップ（asyncの外で確実に実行）
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel)
+        console.log('[ProjectChat] channel removed')
+      }
+    }
   }, [projectId])
-
-  const loadMessages = async () => {
-    const { data, error } = await supabase
-      .from('project_messages')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .limit(100)
-
-    if (error) {
-      console.error('[ProjectChat] loadMessages error:', JSON.stringify(error))
-      return
-    }
-
-    if (data) {
-      setMessages(data)
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-    }
-  }
 
   const handleSend = async () => {
     if (!input.trim() || sending || !currentUserId) return
@@ -101,7 +102,7 @@ export default function ProjectChat({ projectId }: Props) {
 
     if (error) {
       console.error('[ProjectChat] insert error:', JSON.stringify(error))
-      alert(`送信エラー: ${error.message} (code: ${error.code})`)
+      alert(`送信エラー: ${error.message}`)
     }
 
     setInput('')
@@ -168,7 +169,7 @@ export default function ProjectChat({ projectId }: Props) {
         <span className="text-[#8B92A9] text-xs ml-auto">{messages.length}件</span>
       </div>
 
-      {/* 認証エラー表示 */}
+      {/* 認証エラー */}
       {authError && (
         <div className="mx-4 mt-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs">
           {authError}
