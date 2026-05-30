@@ -252,7 +252,7 @@ export default function LandingPage() {
               通常2〜3営業日以内にご返信します。
             </p>
           </div>
-          <div className="bg-[#1A1D26] border border-[#2E3347] rounded-2xl p-8">
+          <div className="bg-[#1A1D26] border border-[#2E3347] rounded-2xl p-5 sm:p-8">
             <ContactForm />
           </div>
         </div>

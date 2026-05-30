@@ -55,15 +55,11 @@ export default function ContactForm() {
     )
   }
 
-  const inputClass =
-    'w-full bg-[#0F1117] border border-[#2E3347] rounded-lg px-4 py-3 text-[#F0F2F8] placeholder-[#4A5066] text-sm focus:outline-none focus:border-amber-500 transition-colors'
-  const labelClass = 'block text-[#8B92A9] text-sm font-medium mb-1.5'
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid sm:grid-cols-2 gap-5">
-        <div>
-          <label className={labelClass}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="min-w-0">
+          <label className="block text-[#8B92A9] text-sm font-medium mb-1.5">
             会社名 <span className="text-amber-400">*</span>
           </label>
           <input
@@ -73,11 +69,11 @@ export default function ContactForm() {
             value={form.companyName}
             onChange={handleChange}
             required
-            className={inputClass}
+            className="block w-full bg-[#0F1117] border border-[#2E3347] rounded-lg px-4 py-3 text-[#F0F2F8] text-sm focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
-        <div>
-          <label className={labelClass}>
+        <div className="min-w-0">
+          <label className="block text-[#8B92A9] text-sm font-medium mb-1.5">
             担当者名 <span className="text-amber-400">*</span>
           </label>
           <input
@@ -87,13 +83,13 @@ export default function ContactForm() {
             value={form.contactName}
             onChange={handleChange}
             required
-            className={inputClass}
+            className="block w-full bg-[#0F1117] border border-[#2E3347] rounded-lg px-4 py-3 text-[#F0F2F8] text-sm focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
       </div>
 
       <div>
-        <label className={labelClass}>
+        <label className="block text-[#8B92A9] text-sm font-medium mb-1.5">
           メールアドレス <span className="text-amber-400">*</span>
         </label>
         <input
@@ -103,12 +99,12 @@ export default function ContactForm() {
           value={form.email}
           onChange={handleChange}
           required
-          className={inputClass}
+          className="block w-full bg-[#0F1117] border border-[#2E3347] rounded-lg px-4 py-3 text-[#F0F2F8] text-sm focus:outline-none focus:border-amber-500 transition-colors"
         />
       </div>
 
       <div>
-        <label className={labelClass}>
+        <label className="block text-[#8B92A9] text-sm font-medium mb-1.5">
           お問い合わせ内容 <span className="text-amber-400">*</span>
         </label>
         <textarea
@@ -118,7 +114,7 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={5}
-          className={`${inputClass} resize-none`}
+          className="block w-full bg-[#0F1117] border border-[#2E3347] rounded-lg px-4 py-3 text-[#F0F2F8] text-sm focus:outline-none focus:border-amber-500 transition-colors resize-none"
         />
       </div>
 
