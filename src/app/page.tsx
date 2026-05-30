@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { HardHat, BarChart2, Smartphone, FileText, CheckCircle, ArrowRight, Mail } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
+import ScreenshotSection from '@/components/ScreenshotSection'
 
 // ランディングページ
 export default function LandingPage() {
@@ -154,6 +155,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* スクリーンショット */}
+      <ScreenshotSection />
 
       {/* 料金 */}
       <section className="px-6 py-16 bg-[#1A1D26]">
