@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Download } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardHeader, CardTitle, CardValue } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -64,6 +64,35 @@ export default function DashboardPage() {
     fetchData()
   }, [])
 
+  const handleCsvDownload = () => {
+    const STATUS_LABELS: Record<string, string> = {
+      active: '進行中',
+      completed: '完了',
+      cancelled: 'キャンセル',
+    }
+    const header = ['工事名', '発注元', '契約金額', '実績原価', '予測利益', '予測利益率', 'ステータス']
+    const rows = projects.map((p) => [
+      p.name,
+      p.client_name ?? '',
+      p.contract_amount,
+      p.total_actual_cost,
+      p.estimated_profit,
+      `${p.estimated_profit_rate.toFixed(1)}%`,
+      STATUS_LABELS[p.status] ?? p.status,
+    ])
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const bom = '\uFEFF'
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `genka_projects_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   // アクティブな工事のみ
   const activeProjects = projects.filter((p) => p.status === 'active')
 
@@ -91,12 +120,18 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-[#F0F2F8]">ダッシュボード</h1>
             <p className="text-[#8B92A9] text-sm mt-1">進行中の工事を管理しています</p>
           </div>
-          <Link href="/projects/new">
-            <Button variant="primary">
-              <Plus className="w-4 h-4" />
-              新規工事登録
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={handleCsvDownload} disabled={loading || projects.length === 0}>
+              <Download className="w-4 h-4" />
+              CSVダウンロード
             </Button>
-          </Link>
+            <Link href="/projects/new">
+              <Button variant="primary">
+                <Plus className="w-4 h-4" />
+                新規工事登録
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* サマリーカード */}
