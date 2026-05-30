@@ -17,7 +17,6 @@ import {
   formatCurrency,
   formatRate,
   calculateProjectSummary,
-  getProfitRateStatus,
   PROJECT_STATUS_CONFIG,
 } from '@/lib/utils'
 import { ProjectStatus } from '@/types'
