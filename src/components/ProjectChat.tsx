@@ -21,42 +21,67 @@ export default function ProjectChat({ projectId }: Props) {
   const [sending, setSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUserId(user?.id ?? null)
-    })
+    const init = async () => {
+      // セッション確認（競合状態を防ぐためawaitで待つ）
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-    loadMessages()
+      if (sessionError) {
+        console.error('[ProjectChat] getSession error:', sessionError)
+        setAuthError(`認証エラー: ${sessionError.message}`)
+        return
+      }
 
-    const channel = supabase
-      .channel(`project-chat-${projectId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'project_messages',
-          filter: `project_id=eq.${projectId}`,
-        },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as Message])
-          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-        }
-      )
-      .subscribe()
+      if (!session) {
+        console.warn('[ProjectChat] セッションなし — localStorage key:', 'genka-auth',
+          '— localStorage値:', typeof window !== 'undefined' ? localStorage.getItem('genka-auth') : 'N/A')
+        setAuthError('セッションが見つかりません。再ログインしてください。')
+        return
+      }
 
-    return () => { supabase.removeChannel(channel) }
+      console.log('[ProjectChat] session OK, user:', session.user.id, 'expires:', new Date(session.expires_at! * 1000).toLocaleString())
+      setCurrentUserId(session.user.id)
+
+      await loadMessages()
+
+      const channel = supabase
+        .channel(`project-chat-${projectId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'project_messages',
+            filter: `project_id=eq.${projectId}`,
+          },
+          (payload) => {
+            setMessages(prev => [...prev, payload.new as Message])
+            setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          }
+        )
+        .subscribe()
+
+      return () => { supabase.removeChannel(channel) }
+    }
+
+    init()
   }, [projectId])
 
   const loadMessages = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('project_messages')
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
       .limit(100)
+
+    if (error) {
+      console.error('[ProjectChat] loadMessages error:', JSON.stringify(error))
+      return
+    }
 
     if (data) {
       setMessages(data)
@@ -68,11 +93,16 @@ export default function ProjectChat({ projectId }: Props) {
     if (!input.trim() || sending || !currentUserId) return
     setSending(true)
 
-    await supabase.from('project_messages').insert({
+    const { error } = await supabase.from('project_messages').insert({
       project_id: projectId,
       user_id: currentUserId,
       content: input.trim(),
     })
+
+    if (error) {
+      console.error('[ProjectChat] insert error:', JSON.stringify(error))
+      alert(`送信エラー: ${error.message} (code: ${error.code})`)
+    }
 
     setInput('')
     setSending(false)
@@ -138,9 +168,16 @@ export default function ProjectChat({ projectId }: Props) {
         <span className="text-[#8B92A9] text-xs ml-auto">{messages.length}件</span>
       </div>
 
+      {/* 認証エラー表示 */}
+      {authError && (
+        <div className="mx-4 mt-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs">
+          {authError}
+        </div>
+      )}
+
       {/* メッセージ一覧 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 && (
+        {messages.length === 0 && !authError && (
           <div className="text-center text-[#8B92A9] text-sm py-8">
             まだメッセージがありません。最初のメッセージを送りましょう。
           </div>
@@ -202,7 +239,7 @@ export default function ProjectChat({ projectId }: Props) {
         />
         <button
           onClick={handleSend}
-          disabled={sending || !input.trim()}
+          disabled={sending || !input.trim() || !currentUserId}
           className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-gray-900 px-4 py-2 rounded-xl font-semibold text-sm transition-colors flex-shrink-0"
         >
           送信
