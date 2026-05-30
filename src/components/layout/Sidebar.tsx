@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart2, HardHat, Plus, Settings, LogOut, Users } from 'lucide-react'
+import { BarChart2, HardHat, Plus, Settings, LogOut, Users, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { MemberRole } from '@/types'
@@ -11,6 +11,7 @@ import { MemberRole } from '@/types'
 const Sidebar = ({ companyName, role }: { companyName: string; role: MemberRole }) => {
   const navItems = [
     { href: '/dashboard', label: 'ダッシュボード', icon: BarChart2 },
+    { href: '/estimates', label: '見積もり', icon: FileText },
     { href: '/projects/new', label: '新規工事登録', icon: Plus },
     ...(role === 'owner' ? [{ href: '/team', label: 'チーム管理', icon: Users }] : []),
     { href: '/settings', label: '設定', icon: Settings },

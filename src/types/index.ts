@@ -38,6 +38,25 @@ export interface Cost {
   created_at: string
 }
 
+export type EstimateStatus = 'draft' | 'sent' | 'ordered' | 'rejected'
+
+export interface Estimate {
+  id: string
+  company_id: string
+  name: string
+  client_name: string | null
+  contract_amount: number
+  cost_labor: number
+  cost_material: number
+  cost_outsource: number
+  cost_expense: number
+  note: string | null
+  status: EstimateStatus
+  converted_project_id: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type MemberRole = 'owner' | 'member'
 
 export interface CompanyMember {

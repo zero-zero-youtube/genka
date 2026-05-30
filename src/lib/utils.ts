@@ -93,6 +93,17 @@ export const getProfitRateStatus = (
   return { label: '● 順調', variant: 'success' }
 }
 
+// 見積もりステータス設定
+export const ESTIMATE_STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: 'blue' | 'warning' | 'success' | 'gray' }
+> = {
+  draft:    { label: '下書き',   variant: 'gray' },
+  sent:     { label: '提出済み', variant: 'blue' },
+  ordered:  { label: '受注',     variant: 'success' },
+  rejected: { label: '失注',     variant: 'gray' },
+}
+
 // 工事ステータスのラベル・バッジvariantを返す
 export const PROJECT_STATUS_CONFIG: Record<
   string,

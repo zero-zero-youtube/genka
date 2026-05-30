@@ -41,6 +41,24 @@ CREATE TABLE costs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 見積もりテーブル
+CREATE TABLE estimates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  client_name TEXT,
+  contract_amount INTEGER NOT NULL DEFAULT 0,
+  cost_labor INTEGER NOT NULL DEFAULT 0,
+  cost_material INTEGER NOT NULL DEFAULT 0,
+  cost_outsource INTEGER NOT NULL DEFAULT 0,
+  cost_expense INTEGER NOT NULL DEFAULT 0,
+  note TEXT,
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'ordered', 'rejected')),
+  converted_project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- メンバーテーブル
 CREATE TABLE company_members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -67,6 +85,18 @@ CREATE TABLE invitations (
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE costs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE estimates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "自社見積もりのみアクセス可能" ON estimates
+  FOR ALL USING (company_id = get_my_company_id());
+
+CREATE TRIGGER update_estimates_updated_at
+  BEFORE UPDATE ON estimates
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_updated_at_column();
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.estimates TO authenticated;
+
 ALTER TABLE company_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
