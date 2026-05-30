@@ -93,6 +93,17 @@ export const getProfitRateStatus = (
   return { label: '● 順調', variant: 'success' }
 }
 
+// 工事ステータスのラベル・バッジvariantを返す
+export const PROJECT_STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: 'blue' | 'success' | 'warning' | 'gray' }
+> = {
+  active:    { label: '進行中', variant: 'blue' },
+  completed: { label: '完工',   variant: 'success' },
+  invoiced:  { label: '請求済み', variant: 'warning' },
+  paid:      { label: '入金済み', variant: 'gray' },
+}
+
 // カテゴリの日本語ラベル
 export const CATEGORY_LABELS: Record<string, string> = {
   labor: '労務費',

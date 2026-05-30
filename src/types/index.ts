@@ -1,6 +1,6 @@
 // アプリ全体で使用する型定義
 
-export type ProjectStatus = 'active' | 'completed' | 'cancelled'
+export type ProjectStatus = 'active' | 'completed' | 'invoiced' | 'paid'
 export type CostCategory = 'labor' | 'material' | 'outsource' | 'expense'
 
 export interface Company {

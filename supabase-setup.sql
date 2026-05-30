@@ -24,7 +24,7 @@ CREATE TABLE projects (
   budget_expense INTEGER NOT NULL DEFAULT 0,    -- 予算：経費
   start_date DATE,
   end_date DATE,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled')),
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'invoiced', 'paid')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

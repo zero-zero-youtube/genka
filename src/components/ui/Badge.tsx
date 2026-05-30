@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 interface BadgeProps {
-  variant: 'danger' | 'warning' | 'success'
+  variant: 'danger' | 'warning' | 'success' | 'blue' | 'gray'
   children: React.ReactNode
   className?: string
   pulse?: boolean
@@ -13,6 +13,8 @@ const Badge = ({ variant, children, className, pulse }: BadgeProps) => {
     danger: 'badge-danger',
     warning: 'badge-warning',
     success: 'badge-success',
+    blue: 'badge-blue',
+    gray: 'badge-gray',
   }
 
   return (

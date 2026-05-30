@@ -18,7 +18,9 @@ import {
   formatRate,
   calculateProjectSummary,
   getProfitRateStatus,
+  PROJECT_STATUS_CONFIG,
 } from '@/lib/utils'
+import { ProjectStatus } from '@/types'
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([])
@@ -64,11 +66,24 @@ export default function DashboardPage() {
     fetchData()
   }, [])
 
+  const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
+    const { error } = await supabase
+      .from('projects')
+      .update({ status: newStatus })
+      .eq('id', projectId)
+    if (!error) {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, status: newStatus } : p))
+      )
+    }
+  }
+
   const handleCsvDownload = () => {
     const STATUS_LABELS: Record<string, string> = {
       active: '進行中',
-      completed: '完了',
-      cancelled: 'キャンセル',
+      completed: '完工',
+      invoiced: '請求済み',
+      paid: '入金済み',
     }
     const header = ['工事名', '発注元', '契約金額', '実績原価', '予測利益', '予測利益率', 'ステータス']
     const rows = projects.map((p) => [
@@ -227,7 +242,7 @@ export default function DashboardPage() {
                   </tr>
                 ) : (
                   projects.map((project) => {
-                    const status = getProfitRateStatus(project.estimated_profit_rate)
+                    const statusConfig = PROJECT_STATUS_CONFIG[project.status] ?? PROJECT_STATUS_CONFIG['active']
                     return (
                       <tr
                         key={project.id}
@@ -270,12 +285,21 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge
-                            variant={status.variant}
-                            pulse={status.variant === 'danger'}
-                          >
-                            {status.label}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={statusConfig.variant}>
+                              {statusConfig.label}
+                            </Badge>
+                            <select
+                              value={project.status}
+                              onChange={(e) => handleStatusChange(project.id, e.target.value as ProjectStatus)}
+                              className="bg-[#222639] border border-[#2E3347] text-[#8B92A9] text-xs rounded-md px-1.5 py-1 focus:outline-none focus:border-amber-500 cursor-pointer"
+                            >
+                              <option value="active">進行中</option>
+                              <option value="completed">完工</option>
+                              <option value="invoiced">請求済み</option>
+                              <option value="paid">入金済み</option>
+                            </select>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <Link href={`/projects/${project.id}`}>
