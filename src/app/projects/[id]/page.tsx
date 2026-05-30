@@ -11,6 +11,8 @@ import Badge from '@/components/ui/Badge'
 import Toast from '@/components/ui/Toast'
 import Input from '@/components/ui/Input'
 import BudgetVsActualChart from '@/components/charts/BudgetVsActualChart'
+import PhotoUpload from '@/components/PhotoUpload'
+import ProjectChat from '@/components/ProjectChat'
 import { supabase } from '@/lib/supabase'
 import { Project, Cost, ProjectSummary, CostCategory } from '@/types'
 import {
@@ -543,6 +545,16 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 現場写真 & トーク */}
+      {project && (
+        <div className="px-6 lg:px-8 pb-8 max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <PhotoUpload projectId={project.id} />
+            <ProjectChat projectId={project.id} />
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
