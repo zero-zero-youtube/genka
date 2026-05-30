@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Camera, Image as ImageIcon, X } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'genka-auth' } }
-)
+import { supabase } from '@/lib/supabase'
 
 interface Props {
   projectId: string
