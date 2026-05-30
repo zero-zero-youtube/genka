@@ -46,11 +46,20 @@ export default function LoginPage() {
 
         if (signUpData.user) {
           // 会社情報を保存
-          const { error: companyError } = await supabase.from('companies').insert({
-            name: companyName.trim(),
-            owner_id: signUpData.user.id,
-          })
+          const { data: newCompany, error: companyError } = await supabase
+            .from('companies')
+            .insert({ name: companyName.trim(), owner_id: signUpData.user.id })
+            .select()
+            .single()
           if (companyError) throw companyError
+
+          // オーナーをcompany_membersに登録（これがないとダッシュボードに入れない）
+          const { error: memberError } = await supabase.from('company_members').insert({
+            company_id: newCompany.id,
+            user_id: signUpData.user.id,
+            role: 'owner',
+          })
+          if (memberError) throw memberError
         }
 
         router.push('/dashboard')

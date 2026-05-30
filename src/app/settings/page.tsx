@@ -31,15 +31,17 @@ function SettingsForm() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('owner_id', user.id)
+      // company_members 経由で会社を取得（RLS対応）
+      const { data: memberData } = await supabase
+        .from('company_members')
+        .select('companies(*)')
+        .eq('user_id', user.id)
         .single()
 
-      if (!error && data) {
-        setCompany(data)
-        setCompanyName(data.name)
+      const companyData = memberData?.companies as unknown as Company | null
+      if (companyData) {
+        setCompany(companyData)
+        setCompanyName(companyData.name)
       }
     }
     fetchCompany()
