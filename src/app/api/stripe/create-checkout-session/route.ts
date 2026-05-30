@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const { plan, userId, companyId, email } = await req.json()
 
+
     if (!plan || !PRICE_IDS[plan as PlanKey]) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
