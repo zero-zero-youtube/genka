@@ -109,7 +109,7 @@ export default function ContactForm() {
         </label>
         <textarea
           name="message"
-          placeholder="ご質問・ご要望などをご記入ください"
+          placeholder="無料モニターへの申し込み、導入のご相談、ご質問などお気軽にどうぞ。"
           value={form.message}
           onChange={handleChange}
           required

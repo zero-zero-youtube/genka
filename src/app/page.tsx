@@ -3,11 +3,15 @@ import { HardHat, BarChart2, Smartphone, FileText, CheckCircle, ArrowRight, Mail
 import ContactForm from '@/components/ContactForm'
 import ScreenshotSection from '@/components/ScreenshotSection'
 import PricingSection from '@/components/PricingSection'
+import MonitorBanner from '@/components/MonitorBanner'
 
 // ランディングページ
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0F1117] text-[#F0F2F8]">
+      {/* モニター募集バナー */}
+      <MonitorBanner />
+
       {/* ナビゲーション */}
       <nav className="border-b border-[#2E3347] px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -301,13 +305,13 @@ export default function LandingPage() {
       </section>}
 
       {/* お問い合わせ */}
-      <section className="px-6 py-16">
+      <section id="contact" className="px-6 py-16">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
             <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Mail className="w-7 h-7 text-amber-400" />
             </div>
-            <h2 className="text-2xl lg:text-3xl font-bold mb-3">お問い合わせ</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">お問い合わせ・無料モニター申し込み</h2>
             <p className="text-[#8B92A9]">
               導入のご相談・ご質問はお気軽にお問い合わせください。
               <br />
