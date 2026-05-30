@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart2, HardHat, Plus, Settings, LogOut } from 'lucide-react'
+import { BarChart2, HardHat, Plus, Settings, LogOut, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
-
-const navItems = [
-  { href: '/dashboard', label: 'ダッシュボード', icon: BarChart2 },
-  { href: '/projects/new', label: '新規工事登録', icon: Plus },
-  { href: '/settings', label: '設定', icon: Settings },
-]
+import { MemberRole } from '@/types'
 
 // サイドバーナビゲーション
-const Sidebar = ({ companyName }: { companyName: string }) => {
+const Sidebar = ({ companyName, role }: { companyName: string; role: MemberRole }) => {
+  const navItems = [
+    { href: '/dashboard', label: 'ダッシュボード', icon: BarChart2 },
+    { href: '/projects/new', label: '新規工事登録', icon: Plus },
+    ...(role === 'owner' ? [{ href: '/team', label: 'チーム管理', icon: Users }] : []),
+    { href: '/settings', label: '設定', icon: Settings },
+  ]
   const pathname = usePathname()
   const router = useRouter()
 

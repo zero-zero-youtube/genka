@@ -38,6 +38,29 @@ export interface Cost {
   created_at: string
 }
 
+export type MemberRole = 'owner' | 'member'
+
+export interface CompanyMember {
+  id: string
+  company_id: string
+  user_id: string
+  role: MemberRole
+  joined_at: string
+  // joinして取得するユーザー情報
+  email?: string
+}
+
+export interface Invitation {
+  id: string
+  company_id: string
+  email: string | null
+  role: MemberRole
+  invited_by: string
+  expires_at: string
+  accepted_at: string | null
+  created_at: string
+}
+
 // 計算済みプロジェクトサマリー
 export interface ProjectSummary extends Project {
   total_actual_cost: number

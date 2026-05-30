@@ -3,35 +3,34 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Company } from '@/types'
+import { Company, MemberRole } from '@/types'
 import Sidebar from './Sidebar'
 
 // 認証済みレイアウト（サイドバー付き）
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [company, setCompany] = useState<Company | null>(null)
+  const [role, setRole] = useState<MemberRole>('member')
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     const init = async () => {
-      // セッション確認
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.push('/login')
         return
       }
 
-      // 会社情報取得
-      const { data: companyData, error } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('owner_id', user.id)
+      // company_membersからメンバーとして所属する会社を取得
+      const { data: memberData } = await supabase
+        .from('company_members')
+        .select('role, companies(*)')
+        .eq('user_id', user.id)
         .single()
 
-      if (error || !companyData) {
-        // 会社未登録なら設定ページへ（すでに設定ページにいる場合はリダイレクトしない）
-        if (!pathname.startsWith('/settings')) {
+      if (!memberData) {
+        if (!pathname.startsWith('/settings') && !pathname.startsWith('/invite')) {
           router.push('/settings?setup=true')
           return
         }
@@ -39,7 +38,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         return
       }
 
-      setCompany(companyData)
+      setCompany(memberData.companies as unknown as Company)
+      setRole(memberData.role as MemberRole)
       setLoading(false)
     }
     init()
@@ -58,7 +58,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-[#0F1117] flex">
-      <Sidebar companyName={company?.name ?? ''} />
+      <Sidebar companyName={company?.name ?? ''} role={role} />
       {/* メインコンテンツ：モバイルで底部タブバー分のパディング */}
       <main className="flex-1 overflow-auto pb-20 lg:pb-0">
         {children}

@@ -63,11 +63,20 @@ function SettingsForm() {
         if (error) throw error
       } else {
         // 新規作成（初期セットアップ）
-        const { error } = await supabase.from('companies').insert({
-          name: companyName.trim(),
-          owner_id: user.id,
+        const { data: newCompany, error: companyError } = await supabase
+          .from('companies')
+          .insert({ name: companyName.trim(), owner_id: user.id })
+          .select()
+          .single()
+        if (companyError) throw companyError
+
+        // オーナーをメンバーテーブルに登録
+        const { error: memberError } = await supabase.from('company_members').insert({
+          company_id: newCompany.id,
+          user_id: user.id,
+          role: 'owner',
         })
-        if (error) throw error
+        if (memberError) throw memberError
       }
 
       setToast({ message: '会社情報を保存しました', type: 'success' })
