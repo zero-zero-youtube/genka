@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, FileText } from 'lucide-react'
+import { ArrowLeft, Trash2, FileText, Pencil, X, Check } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Toast from '@/components/ui/Toast'
+import Input from '@/components/ui/Input'
 import BudgetVsActualChart from '@/components/charts/BudgetVsActualChart'
 import { supabase } from '@/lib/supabase'
 import { Project, Cost, ProjectSummary, CostCategory } from '@/types'
@@ -187,6 +188,10 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<ProjectSummary | null>(null)
   const [costs, setCosts] = useState<Cost[]>([])
   const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', client_name: '', contract_amount: '', start_date: '', end_date: '' })
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const fetchProject = useCallback(async () => {
     const { data: projectData, error: projectError } = await supabase
@@ -213,7 +218,15 @@ export default function ProjectDetailPage() {
 
     const projectCosts = costsData ?? []
     setCosts(projectCosts)
-    setProject(calculateProjectSummary(projectData as Project, projectCosts as Cost[]))
+    const summary = calculateProjectSummary(projectData as Project, projectCosts as Cost[])
+    setProject(summary)
+    setEditForm({
+      name: projectData.name,
+      client_name: projectData.client_name ?? '',
+      contract_amount: String(projectData.contract_amount),
+      start_date: projectData.start_date ?? '',
+      end_date: projectData.end_date ?? '',
+    })
     setLoading(false)
   }, [projectId, router])
 
@@ -223,13 +236,44 @@ export default function ProjectDetailPage() {
 
   const handleDeleteCost = async (costId: string) => {
     if (!confirm('この原価を削除しますか？')) return
-
     const { error } = await supabase.from('costs').delete().eq('id', costId)
+    if (error) { console.error('原価削除エラー:', error); return }
+    fetchProject()
+  }
+
+  const handleUpdate = async () => {
+    const name = editForm.name.trim()
+    if (!name) return
+    const amount = parseInt(editForm.contract_amount, 10)
+    if (isNaN(amount) || amount <= 0) return
+
+    setSaving(true)
+    const { error } = await supabase
+      .from('projects')
+      .update({
+        name,
+        client_name: editForm.client_name.trim() || null,
+        contract_amount: amount,
+        start_date: editForm.start_date || null,
+        end_date: editForm.end_date || null,
+      })
+      .eq('id', projectId)
+    setSaving(false)
+
     if (error) {
-      console.error('原価削除エラー:', error)
+      setToast({ message: '更新に失敗しました', type: 'error' })
       return
     }
+    setEditMode(false)
+    setToast({ message: '工事情報を更新しました', type: 'success' })
     fetchProject()
+  }
+
+  const handleDeleteProject = async () => {
+    if (!confirm(`「${project?.name}」を削除しますか？\nこの操作は取り消せません。原価データもすべて削除されます。`)) return
+    const { error } = await supabase.from('projects').delete().eq('id', projectId)
+    if (error) { setToast({ message: '削除に失敗しました', type: 'error' }); return }
+    router.push('/dashboard')
   }
 
   if (loading) {
@@ -253,32 +297,101 @@ export default function ProjectDetailPage() {
     <DashboardLayout>
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
         {/* ヘッダー */}
-        <div className="flex items-start justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4" />
-                戻る
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-[#F0F2F8]">{project.name}</h1>
-              {project.client_name && (
-                <p className="text-[#8B92A9] text-sm mt-0.5">{project.client_name}</p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4" />
+                  戻る
+                </Button>
+              </Link>
+              {!editMode && (
+                <div>
+                  <h1 className="text-2xl font-bold text-[#F0F2F8]">{project.name}</h1>
+                  {project.client_name && (
+                    <p className="text-[#8B92A9] text-sm mt-0.5">{project.client_name}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={profitStatus.variant} pulse={profitStatus.variant === 'danger'}>
+                {profitStatus.label}
+              </Badge>
+              {!editMode && (
+                <>
+                  <Button variant="secondary" size="sm" onClick={() => setEditMode(true)}>
+                    <Pencil className="w-4 h-4" />
+                    編集
+                  </Button>
+                  <Link href={`/projects/${projectId}/report`}>
+                    <Button variant="secondary" size="sm">
+                      <FileText className="w-4 h-4" />
+                      完工レポート
+                    </Button>
+                  </Link>
+                  <Button variant="danger" size="sm" onClick={handleDeleteProject}>
+                    <Trash2 className="w-4 h-4" />
+                    削除
+                  </Button>
+                </>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={profitStatus.variant} pulse={profitStatus.variant === 'danger'}>
-              {profitStatus.label}
-            </Badge>
-            <Link href={`/projects/${projectId}/report`}>
-              <Button variant="secondary" size="sm">
-                <FileText className="w-4 h-4" />
-                完工レポート
-              </Button>
-            </Link>
-          </div>
+
+          {/* 編集フォーム */}
+          {editMode && (
+            <Card>
+              <h2 className="text-[#F0F2F8] font-bold mb-4">工事情報を編集</h2>
+              <div className="space-y-3">
+                <Input
+                  label="工事名 *"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                />
+                <Input
+                  label="発注元"
+                  placeholder="—"
+                  value={editForm.client_name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, client_name: e.target.value }))}
+                />
+                <Input
+                  label="契約金額（円）*"
+                  type="number"
+                  inputMode="numeric"
+                  prefix="¥"
+                  suffix="円"
+                  value={editForm.contract_amount}
+                  onChange={(e) => setEditForm((f) => ({ ...f, contract_amount: e.target.value }))}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="着工日"
+                    type="date"
+                    value={editForm.start_date}
+                    onChange={(e) => setEditForm((f) => ({ ...f, start_date: e.target.value }))}
+                  />
+                  <Input
+                    label="完工予定日"
+                    type="date"
+                    value={editForm.end_date}
+                    onChange={(e) => setEditForm((f) => ({ ...f, end_date: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button variant="primary" onClick={handleUpdate} loading={saving}>
+                  <Check className="w-4 h-4" />
+                  保存する
+                </Button>
+                <Button variant="secondary" onClick={() => setEditMode(false)} disabled={saving}>
+                  <X className="w-4 h-4" />
+                  キャンセル
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-5 gap-6">
@@ -430,6 +543,10 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       </div>
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </DashboardLayout>
   )
 }
