@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
 import { createClient } from '@supabase/supabase-js'
+
+// Vercel サーバーレス環境で Node.js ランタイムを明示
+export const runtime = 'nodejs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +10,14 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { companyName, contactName, email, message } = await req.json()
+  let body: { companyName?: string; contactName?: string; email?: string; message?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 })
+  }
+
+  const { companyName, contactName, email, message } = body
 
   // バリデーション
   if (!companyName || !contactName || !email || !message) {
@@ -24,12 +33,16 @@ export async function POST(req: NextRequest) {
   })
 
   if (dbError) {
-    console.error('DB保存エラー:', dbError)
-    return NextResponse.json({ error: 'データ保存に失敗しました' }, { status: 500 })
+    console.error('DB保存エラー:', JSON.stringify(dbError))
+    return NextResponse.json(
+      { error: `DB保存失敗: ${dbError.message} (code: ${dbError.code})` },
+      { status: 500 }
+    )
   }
 
-  // メール通知を送信
+  // メール通知（dynamic import で Vercel 互換）
   try {
+    const nodemailer = (await import('nodemailer')).default
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -49,7 +62,7 @@ export async function POST(req: NextRequest) {
         `担当者名：${contactName}`,
         `メールアドレス：${email}`,
         '',
-        `お問い合わせ内容：`,
+        'お問い合わせ内容：',
         message,
       ].join('\n'),
       html: `
@@ -80,7 +93,7 @@ export async function POST(req: NextRequest) {
       `,
     })
   } catch (mailError) {
-    // メール送信失敗はログのみ（DB保存は成功しているため200を返す）
+    // メール失敗はログのみ（DB保存済みなので成功レスポンスを返す）
     console.error('メール送信エラー:', mailError)
   }
 
