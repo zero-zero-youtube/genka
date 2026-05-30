@@ -70,13 +70,15 @@ function SettingsForm() {
           .single()
         if (companyError) throw companyError
 
-        // オーナーをメンバーテーブルに登録
+        // オーナーをメンバーテーブルに登録（失敗してもリダイレクトは継続）
         const { error: memberError } = await supabase.from('company_members').insert({
           company_id: newCompany.id,
           user_id: user.id,
           role: 'owner',
         })
-        if (memberError) throw memberError
+        if (memberError) {
+          console.warn('company_members登録警告（DashboardLayoutで再試行されます）:', JSON.stringify(memberError))
+        }
       }
 
       setToast({ message: '会社情報を保存しました', type: 'success' })

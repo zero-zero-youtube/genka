@@ -29,17 +29,38 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         .eq('user_id', user.id)
         .single()
 
-      if (!memberData) {
-        if (!pathname.startsWith('/settings') && !pathname.startsWith('/invite')) {
-          router.push('/settings?setup=true')
-          return
-        }
+      if (memberData) {
+        setCompany(memberData.companies as unknown as Company)
+        setRole(memberData.role as MemberRole)
         setLoading(false)
         return
       }
 
-      setCompany(memberData.companies as unknown as Company)
-      setRole(memberData.role as MemberRole)
+      // company_membersにない場合、owner_idでフォールバック（初回登録失敗・既存ユーザー対応）
+      const { data: ownedCompany } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (ownedCompany) {
+        // 自動でmember登録（以降はmembersテーブルで管理）
+        await supabase.from('company_members').insert({
+          company_id: ownedCompany.id,
+          user_id: user.id,
+          role: 'owner',
+        })
+        setCompany(ownedCompany)
+        setRole('owner')
+        setLoading(false)
+        return
+      }
+
+      // どちらもない場合は設定ページへ
+      if (!pathname.startsWith('/settings') && !pathname.startsWith('/invite')) {
+        router.push('/settings?setup=true')
+        return
+      }
       setLoading(false)
     }
     init()
