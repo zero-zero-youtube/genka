@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { HardHat, BarChart2, Smartphone, FileText, CheckCircle, ArrowRight } from 'lucide-react'
+import { HardHat, BarChart2, Smartphone, FileText, CheckCircle, ArrowRight, Mail } from 'lucide-react'
+import ContactForm from '@/components/ContactForm'
 
 // ランディングページ
 export default function LandingPage() {
@@ -233,6 +234,26 @@ export default function LandingPage() {
                 30日間無料で試す
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* お問い合わせ */}
+      <section className="px-6 py-16">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-7 h-7 text-amber-400" />
+            </div>
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">お問い合わせ</h2>
+            <p className="text-[#8B92A9]">
+              導入のご相談・ご質問はお気軽にお問い合わせください。
+              <br />
+              通常2〜3営業日以内にご返信します。
+            </p>
+          </div>
+          <div className="bg-[#1A1D26] border border-[#2E3347] rounded-2xl p-8">
+            <ContactForm />
           </div>
         </div>
       </section>
