@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { HardHat, BarChart2, Smartphone, FileText, CheckCircle, ArrowRight, Mail } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import ScreenshotSection from '@/components/ScreenshotSection'
+import PricingSection from '@/components/PricingSection'
 
 // ランディングページ
 export default function LandingPage() {
@@ -159,8 +160,11 @@ export default function LandingPage() {
       {/* スクリーンショット */}
       <ScreenshotSection />
 
-      {/* 料金 */}
-      <section className="px-6 py-16 bg-[#1A1D26]">
+      {/* 料金（PricingSectionコンポーネントに移行済み） */}
+      <PricingSection />
+
+      {/* 料金（削除予定の旧コード - 非表示） */}
+      {false && <section className="px-6 py-16 bg-[#1A1D26]">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl lg:text-3xl font-bold text-center mb-3">料金プラン</h2>
           <p className="text-[#8B92A9] text-center mb-10">まず無料プランでお試しいただけます</p>
@@ -294,7 +298,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* お問い合わせ */}
       <section className="px-6 py-16">
