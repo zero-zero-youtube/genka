@@ -3,9 +3,9 @@
 // Supabaseを使うため動的レンダリングに設定
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, TrendingUp, TrendingDown, Download } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Download, Search, X } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardHeader, CardTitle, CardValue } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -22,9 +22,15 @@ import {
 } from '@/lib/utils'
 import { ProjectStatus } from '@/types'
 
+type StatusFilter = 'all' | 'active' | 'completed' | 'invoiced' | 'paid'
+type PeriodFilter = 'all' | 'month' | 'quarter' | 'year'
+
 export default function DashboardPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchText, setSearchText] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,6 +113,37 @@ export default function DashboardPage() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  // フィルタリング
+  const filteredProjects = useMemo(() => {
+    const now = new Date()
+    const startOf = (unit: 'month' | 'quarter' | 'year'): Date => {
+      const d = new Date(now.getFullYear(), 0, 1)
+      if (unit === 'month') return new Date(now.getFullYear(), now.getMonth(), 1)
+      if (unit === 'quarter') return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+      return d
+    }
+
+    return projects.filter((p) => {
+      // テキスト検索
+      if (searchText.trim()) {
+        const q = searchText.toLowerCase()
+        const matchName = p.name.toLowerCase().includes(q)
+        const matchClient = (p.client_name ?? '').toLowerCase().includes(q)
+        if (!matchName && !matchClient) return false
+      }
+      // ステータスフィルター
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false
+      // 期間フィルター（created_atで判定）
+      if (periodFilter !== 'all') {
+        const created = new Date(p.created_at)
+        if (created < startOf(periodFilter)) return false
+      }
+      return true
+    })
+  }, [projects, searchText, statusFilter, periodFilter])
+
+  const hasFilter = searchText.trim() !== '' || statusFilter !== 'all' || periodFilter !== 'all'
 
   // アクティブな工事のみ
   const activeProjects = projects.filter((p) => p.status === 'active')
@@ -203,10 +240,71 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* 検索・フィルターUI */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          {/* テキスト検索 */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8B92A9]" />
+            <input
+              type="text"
+              placeholder="工事名・発注元で検索..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full bg-[#1A1D26] border border-[#2E3347] rounded-lg text-[#F0F2F8] pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 placeholder:text-[#4B5270]"
+            />
+            {searchText && (
+              <button onClick={() => setSearchText('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B92A9] hover:text-[#F0F2F8]">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* ステータスフィルター */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="bg-[#1A1D26] border border-[#2E3347] text-[#8B92A9] text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500 cursor-pointer"
+          >
+            <option value="all">全ステータス</option>
+            <option value="active">進行中</option>
+            <option value="completed">完工</option>
+            <option value="invoiced">請求済み</option>
+            <option value="paid">入金済み</option>
+          </select>
+
+          {/* 期間フィルター */}
+          <select
+            value={periodFilter}
+            onChange={(e) => setPeriodFilter(e.target.value as PeriodFilter)}
+            className="bg-[#1A1D26] border border-[#2E3347] text-[#8B92A9] text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500 cursor-pointer"
+          >
+            <option value="all">全期間</option>
+            <option value="month">今月</option>
+            <option value="quarter">今四半期</option>
+            <option value="year">今年</option>
+          </select>
+
+          {/* リセット */}
+          {hasFilter && (
+            <button
+              onClick={() => { setSearchText(''); setStatusFilter('all'); setPeriodFilter('all') }}
+              className="text-[#8B92A9] hover:text-amber-400 text-sm flex items-center gap-1 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              リセット
+            </button>
+          )}
+        </div>
+
         {/* 工事一覧テーブル */}
         <Card>
           <CardHeader>
-            <CardTitle>工事一覧</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>工事一覧</CardTitle>
+              {hasFilter && !loading && (
+                <span className="text-[#8B92A9] text-xs">{filteredProjects.length} 件表示</span>
+              )}
+            </div>
           </CardHeader>
 
           <div className="overflow-x-auto">
@@ -240,8 +338,14 @@ export default function DashboardPage() {
                       </Link>
                     </td>
                   </tr>
+                ) : filteredProjects.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12 text-[#8B92A9]">
+                      <p>条件に一致する工事がありません</p>
+                    </td>
+                  </tr>
                 ) : (
-                  projects.map((project) => {
+                  filteredProjects.map((project) => {
                     const statusConfig = PROJECT_STATUS_CONFIG[project.status] ?? PROJECT_STATUS_CONFIG['active']
                     return (
                       <tr
